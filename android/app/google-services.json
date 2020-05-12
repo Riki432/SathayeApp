@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "937236243071",
+    "firebase_url": "https://sathaye-94799.firebaseio.com",
+    "project_id": "sathaye-94799",
+    "storage_bucket": "sathaye-94799.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:937236243071:android:b5feb8cdd16a355061d54a",
+        "android_client_info": {
+          "package_name": "com.sathaye.Sathaye"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "937236243071-d6qs91m327t280aq9adno8sf6qo3c60e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sathaye.Sathaye",
+            "certificate_hash": "80b1a9de596b595e630720798d809c78e5b60e4a"
+          }
+        },
+        {
+          "client_id": "937236243071-ikda2jc2tp3v23k8tra9l09p6v0oql49.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0VbMH_oDslJpMl171OA0UNjFIgpDmpYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "937236243071-ikda2jc2tp3v23k8tra9l09p6v0oql49.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
