@@ -33,6 +33,9 @@ dependencies:
   #To make sure the app looks similar across devices
   flutter_screen_scaler:
 
+  #To display Toasts
+  toast:
+  
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.3

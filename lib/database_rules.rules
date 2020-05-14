@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+		match /Admins/{Admin}{
+    	// Only Admin can read their own information
+    	allow read : if request.auth.uid == Admin
+      // Only Admins can create other Admins
+      allow create : if exists(/databases/$(database)/documents/Admins/$(request.auth.uid))
+      // No one can delete admins
+      allow delete : if false
+      // No one can update Admin information
+      allow update : if false
+    }
+    
+    match /Messages/{Message}{
+    	// Any valid logged in user can read messages
+    	allow read   : if request.auth != null
+      // Only Admins can create messages
+      allow create : if exists(/databases/$(database)/documents/Admins/$(request.auth.uid))
+      // Only the Admin which created a message can delete it.
+      allow delete : if request.auth.uid == resource.data.AuthorUID
+      // No one can update messages
+      allow update : if false
+    }
+    
+    match /Students/{Student}{
+    // Only Student can read their student data
+    	allow read : if request.auth.uid == resource.id
+      // No one can delete student data
+      allow delete : if false
+      // No one can update student data
+      allow update : if false
+      // I have yet to make changes here after I do something about that PRN thing.
+      allow create : if request.auth != null
+    }
+    
+  }
+}
