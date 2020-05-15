@@ -1,6 +1,7 @@
 import 'package:Sathaye/About.dart';
 import 'package:Sathaye/CreateAdmin.dart';
 import 'package:Sathaye/MessageBoard.dart';
+import 'package:Sathaye/PrnSheet.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -37,10 +38,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                   builder: (_) => CreateAdmin()
                 );
               }
-              if(val == "SIGN_OUT"){
+              else if(val == "SIGN_OUT"){
                 print("Signing out");
                 FirebaseAuth.instance.signOut();
                 Navigator.of(context).popAndPushNamed("Login");
+              }
+              else if(val == "NEW_PRN"){
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => PRNSheet()));
               }
             },
             itemBuilder: (context) => [
@@ -50,10 +54,18 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                 value: "NEW_USER",
               ) : null,
 
+              AppState.isAdmin?
+              PopupMenuItem(
+                child: Text("New PRN"),
+                value: "NEW_PRN",
+              ) : null,
+
               PopupMenuItem(
                 child: Text("Sign out"),
                 value: "SIGN_OUT",
               ),
+
+
             ],
           )
         ] : null,
