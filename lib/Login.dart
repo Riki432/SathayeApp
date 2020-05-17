@@ -32,6 +32,7 @@ class _LoginState extends State<Login> {
   //Manages the toggle button handling Student or Admin
   List<bool> _selected = [true, false];
 
+  bool validEmail = true;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +50,7 @@ class _LoginState extends State<Login> {
           Padding(
             padding: scale.getPaddingAll(15),
             child: Container(
-              child: Hero(tag: "Logo", child: Image.asset("assets/logo.jpg"))
+              child: Hero(tag: "Logo", child: Image.asset("assets/logo.jpg", height: scale.getHeight(18)))
             ),
           ),
           Form(
@@ -86,10 +87,9 @@ class _LoginState extends State<Login> {
 
                 Padding(
                   padding: scale.getPadding(0.5, 3),
-                  child: AnimatedOpacity(
-                      curve: Curves.bounceInOut,
-                      duration: Duration(milliseconds: 500),
-                      opacity: _selected[1]? 1: 0,
+                  child: Visibility(
+                      visible: _selected[1],
+                      replacement: Container(),
                       child: TextFormField(
                       enabled: _selected[1],
                       decoration: InputDecoration(
@@ -115,6 +115,81 @@ class _LoginState extends State<Login> {
                   ),
                 )
               ],
+            ),
+          ),
+
+          Visibility(
+              visible: _selected[1],
+              child: Padding(
+              padding: scale.getPadding(0, 2),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FlatButton(
+                  child: Text("Forgot Password?", style: TextStyle(color: Colors.deepPurple),),
+                  onPressed: (){
+                    final emailController = TextEditingController();
+                    validEmail = true;
+                    ///Get the Admin's email ID
+                    showDialog(
+                      barrierDismissible: false,
+                      context: context,
+                      builder: (_) => 
+                      StatefulBuilder(
+                        builder: (context, setDialogState) {
+                          return AlertDialog(
+                            title: ListTile(
+                              title: Text(
+                                "Enter your Email ID",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              leading: Icon(Icons.mail),
+                            ),
+                            contentPadding: EdgeInsets.all(20.0),
+                            content: TextField(
+                              controller: emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: InputDecoration(
+                                  hintText: "Email here", 
+                                  errorText: validEmail? null: "Please enter a valid email",
+                                  border: OutlineInputBorder()
+                                ),
+                              ),
+                            elevation: 15.0,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0)
+                              ),
+                            actions: <Widget>[
+                              FlatButton(
+                                child: Text("Cancel"),
+                                onPressed: ()=> Navigator.of(context).pop(),
+                              ),
+
+                              FlatButton(
+                                child: Text("Submit"),
+                                onPressed: () {
+                                  final pattern = RegExp(
+                        r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
+                                if(!pattern.hasMatch(emailController.text)){
+                                  setDialogState((){
+                                    validEmail = false;
+                                  });
+                                  return;
+                                }
+                                  FirebaseAuth.instance.sendPasswordResetEmail(email: emailController.text);
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+
+                            ],
+                          );
+                        }
+                      )
+                    );
+                  },
+                ),
+              ),
             ),
           ),
 
@@ -174,11 +249,7 @@ class _LoginState extends State<Login> {
                 try{
                   result = await _auth.signInWithEmailAndPassword(email: _idController.text.trim(), password: _passwordController.text.trim());
                   final user = result.user;
-                  AppState.name = user.displayName;
-                  AppState.firstName = user.displayName.split(" ")[0];
-                  AppState.lastName = user.displayName.split(" ")[1];
-                  AppState.isAdmin = true;
-                  AppState.uid = user.uid;
+                  AppState.loadAdminState(user);
 
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => Home()), 
@@ -205,7 +276,9 @@ class _LoginState extends State<Login> {
                 
               }
               else{
-              
+
+                // final doc = await Firestore.instance.collection("Students").limit(1).where("Phone",isEqualTo: _idController.text).get();
+
                 _auth.verifyPhoneNumber(
                   phoneNumber: "+91" + _idController.text, 
                   timeout: Duration(seconds: 60),
@@ -264,10 +337,20 @@ class _LoginState extends State<Login> {
                             );
 
                             final result = await _auth.signInWithCredential(authCred);
-                            final doc = await Firestore.instance.collection("Students").document(result.user.uid).get();
-                            
+                            DocumentSnapshot doc;
+                            try{
+                                doc = await Firestore.instance.collection("Students").document(result.user.uid).get();
+                                AppState.loadState(doc);
+                                Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) => Home(),
+                                )
+                              ); 
+                            }
+                            catch(err){
                             //Making sure the user has registered before they login.
-                            if(!doc.exists){
+                            if(doc == null || !doc.exists){
+                              Navigator.of(context).pop();
                               showDialog(
                                 context: context,
                                 builder: (_) => MessagePopup(
@@ -286,20 +369,7 @@ class _LoginState extends State<Login> {
                               Navigator.of(context).pop(); // Removing the loading screen.
                               return;
                             }
-                            
-
-                            AppState.firstName = doc.data["FirstName"];
-                            AppState.lastName = doc.data["LastName"];
-                            AppState.phone = doc.data["Phone"];
-                            AppState.isAdmin = false;
-                            AppState.department = doc.data["Department"];
-                            AppState.uid = result.user.uid;
-
-                            Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => Home(),
-                            )
-                          ); 
+                            }
                   },
                   verificationCompleted: (AuthCredential phoneAuthCredential) async { 
                   /// This is for the case when we auto retrieve the OTP and user doesn't have to be involved in anyway.
@@ -310,38 +380,39 @@ class _LoginState extends State<Login> {
                   /// Since we need to know which department they belong to that cannot be allowed 
                   /// so we display an error message and delete the user.
                   
-                  final doc = await Firestore.instance.collection("Students").document(result.user.uid).get();
-                  if(!doc.exists){
-                    showDialog(
-                      context: context,
-                      builder: (_) => MessagePopup(
-                        child: Row(
-                          children: <Widget>[
-                            Padding(
-                              padding: EdgeInsets.only(right: 10.0),
-                              child: Icon(Icons.error, color: Colors.red),
-                            ),
-                            Text("Please register before you try login."),
-                          ],
-                        ),
+                  DocumentSnapshot doc;
+                  try{
+                    doc = await Firestore.instance.collection("Students").document(result.user.uid).get();
+                    AppState.loadState(doc);
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => Home(),
                       )
                     );
-                    result.user.delete();
-                    return;
+                  }
+                  catch(err){
+                    if(doc == null || !doc.exists){
+                      Navigator.of(context).pop();
+                      showDialog(
+                        context: context,
+                        builder: (_) => MessagePopup(
+                          child: Row(
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.only(right: 10.0),
+                                child: Icon(Icons.error, color: Colors.red),
+                              ),
+                              Text("Please register before you try login."),
+                            ],
+                          ),
+                        )
+                      );
+                      result.user.delete();
+                      return;
+                    }
                   }
 
-                  AppState.firstName = doc.data["FirstName"];
-                  AppState.lastName = doc.data["LastName"];
-                  AppState.phone = doc.data["Phone"];
-                  AppState.department = doc.data["Department"];
-                  AppState.uid = doc.documentID;
-                  AppState.isAdmin = false;
-
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => Home(),
-                    )
-                  ); 
+ 
                   },
                   verificationFailed: (AuthException error) { 
                     Navigator.of(context).pop();

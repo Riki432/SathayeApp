@@ -84,11 +84,6 @@ class _CreateMessageState extends State<CreateMessage> {
               "AuthorUID"  : AppState.uid
             });
 
-              print(DateTime.now());
-              print(messageController.text);
-              print(AppState.firstName + ' ' + AppState.lastName);
-              print(department);
-
               Navigator.of(context).pop();
             },
           )

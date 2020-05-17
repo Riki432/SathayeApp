@@ -11,21 +11,11 @@ import 'State.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.deepPurple,
       ),
       routes: {
@@ -62,23 +52,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 Future<void> directLogin(context) async{
+  // await FirebaseAuth.instance.signOut();
   final user = await FirebaseAuth.instance.currentUser();
+
   if(user != null){
-    if(user.email != null || user.email.isNotEmpty){
-      AppState.name      = user.displayName;
-      AppState.firstName = user.displayName.split(" ")[0];
-      AppState.lastName  = user.displayName.split(" ")[1];
-      AppState.isAdmin   = true;
-      AppState.uid       = user.uid;
+    if(user.email != null && user.email.isNotEmpty){
+      AppState.loadAdminState(user);
     }
     else{
     final document = await Firestore.instance.collection("Students").document(user.uid).get();
-    AppState.firstName  = document.data["FirstName"];
-    AppState.lastName   = document.data["LastName"];
-    AppState.phone      = document.data["Phone"];
-    AppState.department = document.data["Department"];
-    AppState.isAdmin    = false;
-    AppState.uid        = user.uid;
+    AppState.loadState(document);
     }
     Navigator.of(context).pushReplacementNamed("Home");
     Toast.show("Hello, ${AppState.firstName}!", context, duration: Toast.LENGTH_LONG);

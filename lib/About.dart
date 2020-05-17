@@ -19,7 +19,7 @@ class About extends StatelessWidget {
         children : [
         Padding(
           padding: scale.getPaddingAll(10),
-          child: Image.network("http://www.sathayecollege.edu.in/images/Aboutus1.JPG"),
+          child: Image.asset("assets/college.jpeg"),
         ),
         Padding(
           padding: scale.getPaddingAll(10),

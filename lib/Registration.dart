@@ -19,6 +19,9 @@ class _RegistrationState extends State<Registration> {
   /// Manages the registration form state. Useful for validation.
   final _formKey = GlobalKey<FormState>();
 
+  /// Used to show snackbar for wrong PRN number.
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+
   /// Manages the PRN number field.
   final prnController = TextEditingController();
 
@@ -37,11 +40,14 @@ class _RegistrationState extends State<Registration> {
   /// Manages the Phone No. field.
   final phoneController = TextEditingController();
 
-  
+  ///Manages the UUID field
+  final uidController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     final scale = ScreenScaler()..init(context);
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Text("Registration"),
         backgroundColor: Colors.deepPurple,
@@ -53,17 +59,7 @@ class _RegistrationState extends State<Registration> {
             margin: scale.getMargin(5, 5),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                RaisedButton(
-                  onPressed: (){
-                    prnController.text = "1234567891234567";
-                    firstNameController.text = "Rahul";
-                    lastNameController.text = "Bansode";
-                    phoneController.text = "9152204054";
-                  },
-                  child: Text("Auto fill"),
-                ),
-
+              children: <Widget>[    
                 TextFormField(
                   maxLength: 16,
                   controller: prnController,
@@ -75,6 +71,22 @@ class _RegistrationState extends State<Registration> {
                   validator: (val) => RegExp(r'[0-9]{16}').hasMatch(val)
                       ? null
                       : "Please check the PRN number",
+                ),
+
+                Padding(
+                  padding: scale.getPadding(1, 0),
+                  child: TextFormField(
+                    maxLength: 6,
+                    controller: uidController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                        labelText: "UUID",
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20))),
+                    validator: (val) => RegExp(r'[0-9]{6}').hasMatch(val)
+                        ? null
+                        : "Please check the UUID number",
+                  ),
                 ),
                 
                 Padding(
@@ -122,31 +134,7 @@ class _RegistrationState extends State<Registration> {
                   ),
                 ),
 
-                // Padding(
-                //   padding: scale.getPadding(1, 0),
-                //   child: TextFormField(
-                //     obscureText: !passwordVisible,
-                //     controller: passwordController,
-                //     decoration: InputDecoration(
-                //       suffixIcon: IconButton(
-                //           padding: scale.getPadding(0, 3),
-                //           icon: Icon(Icons.remove_red_eye, color: passwordVisible? Colors.deepPurple : Colors.grey,),
-                //           onPressed: (){
-                //             setState(() {
-                //               passwordVisible = !passwordVisible;
-                //             });
-                //           },
-                //       ),
-                //       labelText: "Password",
-                //         border: OutlineInputBorder(
-                //         borderRadius: BorderRadius.circular(20)
-                //       )
-                //     ),
-                //     validator: (val) =>
-                //         val.length >= 8 ? null : "Must be atleast 8 characters",
-                //   ),
-                // ),
-
+ 
                 Padding(
                   padding: scale.getPadding(1, 0),
                   child: DropdownButtonFormField(
@@ -203,7 +191,6 @@ class _RegistrationState extends State<Registration> {
                       padding: scale.getPadding(0.5, 3), 
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       onPressed: () async { 
-                        print("Starting Registration");
                         if(!_formKey.currentState.validate()) return;
                         final prn = prnController.text;
                         final _auth = FirebaseAuth.instance;
@@ -212,10 +199,10 @@ class _RegistrationState extends State<Registration> {
                         final doc = await _firestore.collection("PRNs").document(prn).get();
                         
                         /// If the record does not exist, shwo error and return
-                        if(false && !doc.exists){
+                        if(!doc.exists){
+
                           /// To Do Show a toast message or snackbar notifying that the user is not a valid user
-                          Toast.show("Not a valid PRN No.", context);
-                          print("Not a valid user");
+                          scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Not a valid PRN No.", style: TextStyle(color: Colors.yellowAccent),)));
                           return;
                         }
 
@@ -231,16 +218,14 @@ class _RegistrationState extends State<Registration> {
                           timeout: Duration(seconds: 60), 
                           verificationCompleted: (AuthCredential phoneAuthCredential) async {
                             final result = await _auth.signInWithCredential(phoneAuthCredential);
-                            
-                            // final user = result.user;
-                            // user.updatePassword(passwordController.text);
 
                             _firestore.collection("Students").document(result.user.uid).setData({
                               "Name" : firstNameController.text + " " + lastNameController.text,
                               "Phone" : phoneController.text,
                               "Department" : department,
                               "Year" : year,
-                              "PRN" : prn
+                              "PRN" : prn,
+                              "UUID" : uidController.text
                             });
 
                             AppState.prn = prnController.text;
@@ -251,7 +236,7 @@ class _RegistrationState extends State<Registration> {
                             AppState.year = year;
                             AppState.isAdmin = false;
                       
-                            
+                            Toast.show("Welcome, ${firstNameController.text}!", context, duration: Toast.LENGTH_LONG);
                             Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => Home()), ModalRoute.withName("/"));
                           }, 
                           verificationFailed: (AuthException error) { 
@@ -304,8 +289,6 @@ class _RegistrationState extends State<Registration> {
                                 );
                               });
                             });
-
-                        print(otp);
                         
                         final phoneAuthCred = PhoneAuthProvider.getCredential(
                           verificationId: _verificationId,
@@ -316,8 +299,6 @@ class _RegistrationState extends State<Registration> {
 
                         final user = authResult.user;
 
-                        // user.updatePassword(passwordController.text);
-
                         user.getIdToken(refresh: true);
 
                         _firestore.collection("Students").document(user.uid).setData({
@@ -325,7 +306,8 @@ class _RegistrationState extends State<Registration> {
                           "Phone" : phoneController.text,
                           "Department" : department,
                           "Year" : year,
-                          "PRN" : prn
+                          "PRN" : prn,
+                          "UUID" : uidController.text
                         });
 
                         AppState.firstName = firstNameController.text;
@@ -333,6 +315,8 @@ class _RegistrationState extends State<Registration> {
                         AppState.department = department;
                         AppState.year = year;
                         AppState.isAdmin = false;
+                        
+                        Toast.show("Welcome, ${firstNameController.text}!", context, duration: Toast.LENGTH_LONG);
                         Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => Home()), ModalRoute.withName("/"));
                       },
                     ),

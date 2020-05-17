@@ -18,7 +18,10 @@ class MessageBox extends StatelessWidget {
   ///The timestamp of the message
   final Timestamp timestamp;
 
-  const MessageBox({Key key, @required this.author, @required this.message, @required this.timestamp, this.uid, this.canDelete = false}) : super(key: key);
+  /// The department the message belongs to.
+  final String department;
+
+  const MessageBox({Key key, @required this.author, @required this.message, @required this.timestamp, @required this.department, this.uid, this.canDelete = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +61,12 @@ class MessageBox extends StatelessWidget {
               padding: _scale.getPaddingAll(7),
               child: Column(
                 children: <Widget>[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(author, style: TextStyle( fontWeight: FontWeight.w300),)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Text(author, style: TextStyle( fontWeight: FontWeight.w300),),
+                      Text(department, style: TextStyle( fontWeight: FontWeight.w300))
+                    ],
                   ),
                   
                   Divider(),

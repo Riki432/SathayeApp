@@ -59,7 +59,11 @@ class _CreateAdminState extends State<CreateAdmin> {
                       borderRadius: BorderRadius.circular(20)
                     )
                   ),
-                  validator: (val) => null,
+                  validator: (val){
+                    final pattern = RegExp(
+                        r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
+                    return pattern.hasMatch(val)? null: "Please enter a valid Email ID.";
+                  },
                 ),
               ),
 
@@ -73,7 +77,7 @@ class _CreateAdminState extends State<CreateAdmin> {
                       borderRadius: BorderRadius.circular(20)
                     )
                   ),
-                  validator: (val) => null,
+                  validator: (val) => val.isNotEmpty? null: "First name cannot be empty",
                 ),
               ),
               
@@ -87,7 +91,7 @@ class _CreateAdminState extends State<CreateAdmin> {
                       borderRadius: BorderRadius.circular(20)
                     )
                   ),
-                  validator: (val) => null,
+                  validator: (val) => val.isNotEmpty? null: "Last name cannot be empty",
                 ),
               ),
 
@@ -110,7 +114,7 @@ class _CreateAdminState extends State<CreateAdmin> {
                       borderRadius: BorderRadius.circular(20)
                     )
                   ),
-                  validator: (val) => null,
+                  validator: (val) => val.length < 8 ? "Password has to be atleast 8 characters long." : null,
                 ),
               ),
 
@@ -132,7 +136,7 @@ class _CreateAdminState extends State<CreateAdmin> {
 
                     Navigator.of(context).pop();
 
-                    Toast.show("Created a new user : ${firstNameController.text} ${lastNameController.text}", context);
+                    Toast.show("Created a new user : ${firstNameController.text} ${lastNameController.text}", context, duration: Toast.LENGTH_LONG);
                   },
                 ),
               )

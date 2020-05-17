@@ -27,7 +27,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.deepPurple,
-        actions: AppState.isAdmin? <Widget>[
+        title: Text("Sathaye"),
+        actions: <Widget>[
           PopupMenuButton(
             icon: Icon(Icons.more_vert),
             onSelected: (val){
@@ -68,7 +69,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 
             ],
           )
-        ] : null,
+        ],
         bottom: TabBar(
           indicatorColor: Colors.deepPurple,
           controller: _tabController,

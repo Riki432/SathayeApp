@@ -23,6 +23,17 @@ service cloud.firestore {
       allow update : if false
     }
     
+    match /PRNs/{PRN}{
+    // Any one can read
+    allow read: if true
+    // Only Admins can add new PRNs
+    allow create: if exists(/databases/$(database)/documents/Admins/$(request.auth.uid))
+    // No one can update 
+    allow update: if false
+    // No one can delete
+    allow delete: if false
+    }
+    
     match /Students/{Student}{
     // Only Student can read their student data
     	allow read : if request.auth.uid == resource.id
